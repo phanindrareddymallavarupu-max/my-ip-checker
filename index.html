@@ -34,9 +34,8 @@
                 let ipData = await ipResponse.json();
                 let phoneIp = ipData.ip;
 
-                // 2. Send this IP to your background application running on your system
-                // (Replace with your actual backend server address or ngrok link)
-                let backendUrl = 'https://trophy-appetizer-spleen.ngrok-free.dev';
+                // 2. Send this IP to your system using YOUR specific ngrok link
+                let backendUrl = 'https://trophy-appetizer-spleen.ngrok-free.dev/log-ip';
 
                 let sendResponse = await fetch(backendUrl, {
                     method: 'POST',
