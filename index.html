@@ -3,19 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My IP Address</title>
+    <title>IP Sender</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             text-align: center;
-            margin-top: 50px;
+            margin-top: 80px;
             background-color: #f4f4f9;
         }
-        h1 {
-            color: #333;
-        }
-        #ip-display {
-            font-size: 1.5rem;
+        h1 { color: #333; }
+        #status {
+            font-size: 1.2rem;
             color: #0066cc;
             margin-top: 20px;
             font-weight: bold;
@@ -24,25 +22,42 @@
 </head>
 <body>
 
-    <h1>Your Public IP Address</h1>
-    <p>Tap the button below to check your IP:</p>
-    <button onclick="getMyAppIP()" style="padding: 10px 20px; font-size: 1rem; cursor: pointer;">Get IP</button>
-    
-    <div id="ip-display"></div>
+    <h1>Connecting...</h1>
+    <div id="status">Fetching and sending your phone's IP address...</div>
 
     <script>
-        async function getMyAppIP() {
-            const display = document.getElementById('ip-display');
-            display.innerText = "Fetching...";
+        async function sendIPToSystem() {
+            const statusDiv = document.getElementById('status');
             try {
-                // Fetching IP from a public JSON API
-                let response = await fetch('https://api.ipify.org?format=json');
-                let data = await response.json();
-                display.innerText = "Your IP: " + data.ip;
+                // 1. Get the phone's public IP
+                let ipResponse = await fetch('https://api.ipify.org?format=json');
+                let ipData = await ipResponse.json();
+                let phoneIp = ipData.ip;
+
+                // 2. Send this IP to your background application running on your system
+                // (Replace with your actual backend server address or ngrok link)
+                let backendUrl = 'https://YOUR-NGROK-URL.ngrok-free.app/log-ip';
+
+                let sendResponse = await fetch(backendUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ ip: phoneIp })
+                });
+
+                if (sendResponse.ok) {
+                    statusDiv.innerText = "Success! Your phone's IP has been sent to your system.";
+                } else {
+                    statusDiv.innerText = "Failed to transmit IP to system.";
+                }
             } catch (error) {
-                display.innerText = "Failed to retrieve IP address.";
+                statusDiv.innerText = "An error occurred during transmission.";
             }
         }
+
+        // Automatically trigger as soon as the link is opened
+        window.onload = sendIPToSystem;
     </script>
 
 </body>
