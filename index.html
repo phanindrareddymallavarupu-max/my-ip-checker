@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My IP Address</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 50px;
+            background-color: #f4f4f9;
+        }
+        h1 {
+            color: #333;
+        }
+        #ip-display {
+            font-size: 1.5rem;
+            color: #0066cc;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Your Public IP Address</h1>
+    <p>Tap the button below to check your IP:</p>
+    <button onclick="getMyAppIP()" style="padding: 10px 20px; font-size: 1rem; cursor: pointer;">Get IP</button>
+    
+    <div id="ip-display"></div>
+
+    <script>
+        async function getMyAppIP() {
+            const display = document.getElementById('ip-display');
+            display.innerText = "Fetching...";
+            try {
+                // Fetching IP from a public JSON API
+                let response = await fetch('https://api.ipify.org?format=json');
+                let data = await response.json();
+                display.innerText = "Your IP: " + data.ip;
+            } catch (error) {
+                display.innerText = "Failed to retrieve IP address.";
+            }
+        }
+    </script>
+
+</body>
+</html>
